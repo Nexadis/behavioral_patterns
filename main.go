@@ -61,11 +61,64 @@ func DemoObserver() {
 	time.Sleep(200 * time.Millisecond)
 }
 
+type command interface {
+	execute()
+}
+
+type receiver interface {
+	action()
+}
+
+type invoker struct {
+	commands map[string]command
+}
+
+func newInvoker() *invoker {
+	i := new(invoker)
+	i.commands = make(map[string]command)
+	return i
+}
+
+func (i *invoker) do(c string) {
+	log.Printf("Exec %s command\n", c)
+	i.commands[c].execute()
+}
+
+type printer struct {
+	receiver receiver
+}
+
+func (c *printer) execute() {
+	c.receiver.action()
+}
+
+type rcvr struct {
+	name string
+}
+
+func (r *rcvr) action() {
+	fmt.Println(r.name)
+}
+
+func DemoCommand() {
+	h := rcvr{"Hello"}
+	hello := printer{&h}
+	b := rcvr{"Bye Bye"}
+	bye := printer{&b}
+	i := newInvoker()
+	i.commands["hello_command"] = &hello
+	i.commands["bye_command"] = &bye
+	i.do("hello_command")
+	i.do("bye_command")
+}
+
 func main() {
 	border("Iterator")
 	DemoIterator()
 	border("Observer")
 	DemoObserver()
+	border("Command")
+	DemoCommand()
 }
 
 func border(name string) {
