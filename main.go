@@ -112,6 +112,79 @@ func DemoCommand() {
 	i.do("bye_command")
 }
 
+type Processor interface {
+	Process(*Request)
+	SetNext(Processor)
+}
+
+type Kind int
+
+const (
+	Urgent Kind = 1 << iota
+	Available
+	Alert
+)
+
+type Request struct {
+	Kind Kind
+	Data string
+}
+
+type Printer struct {
+	next Processor
+}
+
+func (p Printer) Process(req *Request) {
+	if req.Kind&(Urgent|Alert) != 0 {
+		log.Printf("Printer: %s", req.Data)
+	}
+	if p.next != nil {
+		p.next.Process(req)
+	}
+}
+
+func (p *Printer) SetNext(next Processor) {
+	p.next = next
+}
+
+type Logger struct {
+	next Processor
+}
+
+func (l *Logger) SetNext(next Processor) {
+	l.next = next
+}
+
+func (l Logger) Process(req *Request) {
+	if req.Kind&(Urgent|Available) != 0 {
+		log.Printf("Logger: %s", req.Data)
+	}
+	if l.next != nil {
+		l.next.Process(req)
+	}
+}
+
+func DemoCoR() {
+	l := &Logger{}
+	p := &Printer{}
+	l.SetNext(p)
+	r1 := &Request{
+		Urgent,
+		"Urgent",
+	}
+	r2 := &Request{
+		Available,
+		"Available",
+	}
+	r3 := &Request{
+		Alert,
+		"Alert",
+	}
+	l.Process(r1)
+	l.Process(r2)
+	l.Process(r3)
+}
+
 func main() {
 	border("Iterator")
 	DemoIterator()
@@ -119,6 +192,8 @@ func main() {
 	DemoObserver()
 	border("Command")
 	DemoCommand()
+	border("CoR")
+	DemoCoR()
 }
 
 func border(name string) {
