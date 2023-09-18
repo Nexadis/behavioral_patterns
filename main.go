@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -445,6 +446,38 @@ func DemoMediator() {
 	passengerTrain.departure()
 }
 
+type Person struct {
+	Name string
+	Age  int
+}
+
+func (p Person) String() string {
+	return fmt.Sprintf("%s: %d age", p.Name, p.Age)
+}
+
+type ByAge []Person
+
+func (a ByAge) Len() int           { return len(a) }
+func (a ByAge) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByAge) Less(i, j int) bool { return a[i].Age < a[j].Age }
+
+func (a ByAge) Sort() {
+	sort.Sort(a)
+}
+
+func DemoTemplate() {
+	people := ByAge{
+		{"Joe", 23},
+		{"Alice", 45},
+		{"Michael", 10},
+		{"Bob", 21},
+	}
+
+	fmt.Println(people)
+	people.Sort()
+	fmt.Println(people)
+}
+
 func main() {
 	border("Iterator")
 	DemoIterator()
@@ -460,6 +493,8 @@ func main() {
 	DemoMemento()
 	border("Mediator")
 	DemoMediator()
+	border("Template")
+	DemoTemplate()
 }
 
 func border(name string) {
