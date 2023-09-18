@@ -264,6 +264,78 @@ func DemoStrategy() {
 	cache.add("e", "5")
 }
 
+type originator struct {
+	state string
+}
+
+func (o *originator) createMemento() *memento {
+	return &memento{
+		state: o.state,
+	}
+}
+
+func (o *originator) restoreMemento(m *memento) {
+	o.state = m.GetSavedState()
+}
+
+func (o *originator) doSomething(s string) {
+	o.state = s
+}
+
+func (o *originator) getState() string {
+	return o.state
+}
+
+type memento struct {
+	state string
+}
+
+func (m *memento) GetSavedState() string {
+	return m.state
+}
+
+type caretaker struct {
+	mementos []*memento
+}
+
+func newCaretaker() *caretaker {
+	return &caretaker{
+		mementos: make([]*memento, 0),
+	}
+}
+
+func (c *caretaker) addMemento(m *memento) {
+	c.mementos = append(c.mementos, m)
+}
+
+func (c *caretaker) getMemento(index int) *memento {
+	return c.mementos[index]
+}
+
+func DemoMemento() {
+	c := newCaretaker()
+	originator := &originator{
+		state: "A",
+	}
+
+	fmt.Printf("Current state: %s\n", originator.getState())
+	c.addMemento(originator.createMemento())
+
+	originator.doSomething("B")
+	fmt.Printf("Current state: %s\n", originator.getState())
+	c.addMemento(originator.createMemento())
+
+	originator.doSomething("C")
+	fmt.Printf("Current state: %s\n", originator.getState())
+	c.addMemento(originator.createMemento())
+
+	originator.restoreMemento(c.getMemento(1))
+	fmt.Printf("Restored to: %s\n", originator.getState())
+
+	originator.restoreMemento(c.getMemento(0))
+	fmt.Printf("Restored to: %s\n", originator.getState())
+}
+
 func main() {
 	border("Iterator")
 	DemoIterator()
@@ -275,6 +347,8 @@ func main() {
 	DemoCoR()
 	border("Strategy")
 	DemoStrategy()
+	border("Memento")
+	DemoMemento()
 }
 
 func border(name string) {
